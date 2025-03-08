@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video & Audio Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px 0px #ccc;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #ff0000;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #cc0000;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Downloader</h1>
+        <p>Enter a YouTube link to download video or audio (only royalty-free content)</p>
+        <input type="text" id="youtube-url" placeholder="Paste YouTube URL here...">
+        <button onclick="fetchVideoInfo()">Fetch Video</button>
+        <div id="video-info"></div>
+    </div>
+
+    <script>
+        async function fetchVideoInfo() {
+            let url = document.getElementById('youtube-url').value;
+            if (!url) {
+                alert('Please enter a valid YouTube URL');
+                return;
+            }
+            document.getElementById('video-info').innerHTML = '<p>Fetching video details...</p>';
+            
+            const videoId = extractVideoId(url);
+            if (!videoId) {
+                document.getElementById('video-info').innerHTML = '<p>Invalid YouTube URL.</p>';
+                return;
+            }
+
+            const apiKey = 'AIzaSyA1ucDjILyeEhdrGPOiYqOrVehLG0nVTPY';
+            const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet,contentDetails,statistics&key=${apiKey}`;
+            
+            try {
+                let response = await fetch(apiUrl);
+                let data = await response.json();
+                if (data.items.length === 0) {
+                    document.getElementById('video-info').innerHTML = '<p>Video not found.</p>';
+                    return;
+                }
+                
+                let video = data.items[0].snippet;
+                let title = video.title;
+                let thumbnail = video.thumbnails.high.url;
+                
+                document.getElementById('video-info').innerHTML = `
+                    <h3>${title}</h3>
+                    <img src="${thumbnail}" alt="Video Thumbnail">
+                    <p>Download options:</p>
+                    <a href="https://www.yt-download.org/api/button/videos/${videoId}" target="_blank">
+                        <button>Download Video (MP4)</button>
+                    </a>
+                    <a href="https://www.yt-download.org/api/button/mp3/${videoId}" target="_blank">
+                        <button>Download Audio (MP3)</button>
+                    </a>
+                `;
+            } catch (error) {
+                document.getElementById('video-info').innerHTML = '<p>Error fetching video details.</p>';
+            }
+        }
+
+        function extractVideoId(url) {
+            let match = url.match(/[?&]v=([^&]+)/) || url.match(/youtu\.be\/([^?]+)/);
+            return match ? match[1] : null;
+        }
+    </script>
+</body>
+</html>
